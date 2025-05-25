@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notes App</title>
+    <style>
+        :root {
+            --accent-color: #3b82f6;
+            --accent-hover: #2563eb;
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-tertiary: #334155;
+            --text-primary: #f8fafc;
+            --text-secondary: #cbd5e1;
+            --text-muted: #64748b;
+            --border: #475569;
+            --danger: #ef4444;
+            --success: #10b981;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .app-container {
+            display: flex;
+            height: 100vh;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .sidebar {
+            width: 320px;
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--accent-color);
+        }
+
+        .accent-selector {
+            position: relative;
+        }
+
+        .accent-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 2px solid var(--border);
+            background: var(--accent-color);
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .accent-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .accent-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.5rem;
+            display: none;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            width: 120px;
+            z-index: 1000;
+        }
+
+        .accent-dropdown.show {
+            display: flex;
+        }
+
+        .accent-option {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: border 0.2s ease;
+        }
+
+        .accent-option:hover {
+            border-color: var(--text-secondary);
+        }
+
+        .new-note-btn {
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            margin: 1rem 1.5rem;
+            transition: background 0.2s ease;
+        }
+
+        .new-note-btn:hover {
+            background: var(--accent-hover);
+        }
+
+        .notes-tree {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0 1rem;
+        }
+
+        .year-group {
+            margin-bottom: 1rem;
+        }
+
+        .year-header {
+            font-weight: 600;
+            font-size: 1.1rem;
+            padding: 0.75rem;
+            background: var(--bg-tertiary);
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .year-header:hover {
+            background: var(--border);
+        }
+
+        .month-group {
+            margin-left: 1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .month-header {
+            font-weight: 500;
+            padding: 0.5rem 0.75rem;
+            background: var(--bg-secondary);
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.25rem;
+        }
+
+        .month-header:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .note-item {
+            padding: 0.5rem 0.75rem;
+            margin-left: 2rem;
+            border-radius: 4px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+        }
+
+        .note-item:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .note-item.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .content-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .content-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .content-area {
+            flex: 1;
+            padding: 1.5rem;
+            overflow-y: auto;
+        }
+
+        .editor {
+            width: 100%;
+            height: 100%;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            color: var(--text-primary);
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            resize: none;
+            outline: none;
+            min-height: 400px;
+        }
+
+        .editor:focus {
+            border-color: var(--accent-color);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(4px);
+            z-index: 2000;
+        }
+
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            width: 90%;
+            max-width: 400px;
+        }
+
+        .modal-header {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-size: 14px;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: flex-end;
+            margin-top: 1.5rem;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.2s ease;
+        }
+
+        .btn-primary {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-hover);
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            background: var(--border);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-muted);
+        }
+
+        .empty-state h3 {
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+        }
+
+        .chevron {
+            transition: transform 0.2s ease;
+        }
+
+        .chevron.expanded {
+            transform: rotate(90deg);
+        }
+
+        @media (max-width: 768px) {
+            .app-container {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                height: 100vh;
+                z-index: 1500;
+                transform: translateX(-100%);
+                width: 280px;
+            }
+
+            .sidebar.show {
+                transform: translateX(0);
+            }
+
+            .mobile-menu-btn {
+                display: block;
+            }
+
+            .main-content {
+                width: 100%;
+            }
+
+            .modal-content {
+                width: 95%;
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">Notes</div>
+                <div class="accent-selector">
+                    <div class="accent-btn" id="accentBtn"></div>
+                    <div class="accent-dropdown" id="accentDropdown">
+                        <div class="accent-option" style="background: #3b82f6;" data-color="#3b82f6"></div>
+                        <div class="accent-option" style="background: #10b981;" data-color="#10b981"></div>
+                        <div class="accent-option" style="background: #f59e0b;" data-color="#f59e0b"></div>
+                        <div class="accent-option" style="background: #ef4444;" data-color="#ef4444"></div>
+                        <div class="accent-option" style="background: #8b5cf6;" data-color="#8b5cf6"></div>
+                        <div class="accent-option" style="background: #ec4899;" data-color="#ec4899"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="new-note-btn" id="newNoteBtn">+ New Note</button>
+            
+            <div class="notes-tree" id="notesTree">
+                <div class="empty-state">
+                    <h3>No notes found</h3>
+                    <p>Create your first note to get started</p>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="content-header">
+                <button class="mobile-menu-btn" id="mobileMenuBtn">☰</button>
+                <h1 class="content-title" id="contentTitle">Select a note</h1>
+                <div id="noteActions" style="display: none;">
+                    <button class="btn btn-primary" id="saveBtn">Save</button>
+                </div>
+            </header>
+            
+            <div class="content-area">
+                <div class="empty-state" id="emptyState">
+                    <h3>Welcome to Notes</h3>
+                    <p>Select a note from the sidebar or create a new one to start writing</p>
+                </div>
+                <textarea class="editor" id="editor" placeholder="Start writing your note..." style="display: none;"></textarea>
+            </div>
+        </main>
+    </div>
+
+    <div class="modal" id="newNoteModal">
+        <div class="modal-content">
+            <div class="modal-header">Create New Note</div>
+            <form id="newNoteForm">
+                <div class="form-group">
+                    <label class="form-label" for="noteDate">Date</label>
+                    <input type="date" class="form-input" id="noteDate" required>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" id="cancelBtn">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create Note</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        class NotesApp {
+            constructor() {
+                this.notes = new Map();
+                this.currentNote = null;
+                this.currentAccent = '#3b82f6';
+                this.expandedYears = new Set();
+                this.expandedMonths = new Set();
+                
+                this.initializeElements();
+                this.setupEventListeners();
+                this.loadAccentColor();
+                this.loadNotes();
+                this.setDefaultDate();
+            }
+
+            initializeElements() {
+                this.sidebar = document.getElementById('sidebar');
+                this.mobileMenuBtn = document.getElementById('mobileMenuBtn');
+                this.accentBtn = document.getElementById('accentBtn');
+                this.accentDropdown = document.getElementById('accentDropdown');
+                this.newNoteBtn = document.getElementById('newNoteBtn');
+                this.notesTree = document.getElementById('notesTree');
+                this.contentTitle = document.getElementById('contentTitle');
+                this.noteActions = document.getElementById('noteActions');
+                this.emptyState = document.getElementById('emptyState');
+                this.editor = document.getElementById('editor');
+                this.newNoteModal = document.getElementById('newNoteModal');
+                this.newNoteForm = document.getElementById('newNoteForm');
+                this.noteDate = document.getElementById('noteDate');
+                this.cancelBtn = document.getElementById('cancelBtn');
+                this.saveBtn = document.getElementById('saveBtn');
+            }
+
+            setupEventListeners() {
+                this.mobileMenuBtn.addEventListener('click', () => this.toggleSidebar());
+                this.accentBtn.addEventListener('click', () => this.toggleAccentDropdown());
+                this.newNoteBtn.addEventListener('click', () => this.showNewNoteModal());
+                this.newNoteForm.addEventListener('submit', (e) => this.createNote(e));
+                this.cancelBtn.addEventListener('click', () => this.hideNewNoteModal());
+                this.saveBtn.addEventListener('click', () => this.saveCurrentNote());
+                this.editor.addEventListener('input', () => this.markNoteAsModified());
+
+                // Accent color selection
+                document.querySelectorAll('.accent-option').forEach(option => {
+                    option.addEventListener('click', () => {
+                        this.setAccentColor(option.dataset.color);
+                        this.hideAccentDropdown();
+                    });
+                });
+
+                // Close dropdowns when clicking outside
+                document.addEventListener('click', (e) => {
+                    if (!this.accentBtn.contains(e.target) && !this.accentDropdown.contains(e.target)) {
+                        this.hideAccentDropdown();
+                    }
+                });
+
+                // Close modal when clicking outside
+                this.newNoteModal.addEventListener('click', (e) => {
+                    if (e.target === this.newNoteModal) {
+                        this.hideNewNoteModal();
+                    }
+                });
+            }
+
+            toggleSidebar() {
+                this.sidebar.classList.toggle('show');
+            }
+
+            toggleAccentDropdown() {
+                this.accentDropdown.classList.toggle('show');
+            }
+
+            hideAccentDropdown() {
+                this.accentDropdown.classList.remove('show');
+            }
+
+            setAccentColor(color) {
+                this.currentAccent = color;
+                document.documentElement.style.setProperty('--accent-color', color);
+                document.documentElement.style.setProperty('--accent-hover', this.darkenColor(color, 20));
+                this.accentBtn.style.background = color;
+                localStorage.setItem('notesAccentColor', color);
+            }
+
+            darkenColor(color, percent) {
+                const num = parseInt(color.replace("#", ""), 16);
+                const amt = Math.round(2.55 * percent);
+                const R = (num >> 16) - amt;
+                const G = (num >> 8 & 0x00FF) - amt;
+                const B = (num & 0x0000FF) - amt;
+                return "#" + (0x1000000 + (R < 255 ? R < 1 ? 0 : R : 255) * 0x10000 +
+                    (G < 255 ? G < 1 ? 0 : G : 255) * 0x100 +
+                    (B < 255 ? B < 1 ? 0 : B : 255)).toString(16).slice(1);
+            }
+
+            loadAccentColor() {
+                const savedColor = localStorage.getItem('notesAccentColor');
+                if (savedColor) {
+                    this.setAccentColor(savedColor);
+                }
+            }
+
+            setDefaultDate() {
+                const today = new Date();
+                const dateString = today.toISOString().split('T')[0];
+                this.noteDate.value = dateString;
+            }
+
+            showNewNoteModal() {
+                this.newNoteModal.classList.add('show');
+                this.noteDate.focus();
+            }
+
+            hideNewNoteModal() {
+                this.newNoteModal.classList.remove('show');
+                this.newNoteForm.reset();
+                this.setDefaultDate();
+            }
+
+            async createNote(e) {
+                e.preventDefault();
+                const date = this.noteDate.value;
+                const noteId = `${date}.txt`;
+                
+                if (this.notes.has(noteId)) {
+                    alert('A note for this date already exists!');
+                    return;
+                }
+
+                const note = {
+                    id: noteId,
+                    date: date,
+                    content: '',
+                    modified: false
+                };
+
+                this.notes.set(noteId, note);
+                this.saveNotesToStorage();
+                this.renderNotesTree();
+                this.selectNote(noteId);
+                this.hideNewNoteModal();
+            }
+
+            selectNote(noteId) {
+                const note = this.notes.get(noteId);
+                if (!note) return;
+
+                this.currentNote = noteId;
+                this.contentTitle.textContent = this.formatDate(note.date);
+                this.editor.value = note.content;
+                this.editor.style.display = 'block';
+                this.emptyState.style.display = 'none';
+                this.noteActions.style.display = 'block';
+                
+                // Update active state
+                document.querySelectorAll('.note-item').forEach(item => {
+                    item.classList.remove('active');
+                });
+                const activeItem = document.querySelector(`[data-note-id="${noteId}"]`);
+                if (activeItem) {
+                    activeItem.classList.add('active');
+                }
+
+                // Close sidebar on mobile
+                if (window.innerWidth <= 768) {
+                    this.sidebar.classList.remove('show');
+                }
+            }
+
+            markNoteAsModified() {
+                if (this.currentNote) {
+                    const note = this.notes.get(this.currentNote);
+                    if (note) {
+                        note.modified = true;
+                    }
+                }
+            }
+
+            saveCurrentNote() {
+                if (!this.currentNote) return;
+
+                const note = this.notes.get(this.currentNote);
+                if (note) {
+                    note.content = this.editor.value;
+                    note.modified = false;
+                    this.saveNotesToStorage();
+                    this.downloadNote(note);
+                }
+            }
+
+            downloadNote(note) {
+                const blob = new Blob([note.content], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = note.id;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+
+            loadNotes() {
+                const savedNotes = localStorage.getItem('notesData');
+                if (savedNotes) {
+                    const notesArray = JSON.parse(savedNotes);
+                    this.notes = new Map(notesArray);
+                }
+                this.renderNotesTree();
+            }
+
+            saveNotesToStorage() {
+                const notesArray = Array.from(this.notes.entries());
+                localStorage.setItem('notesData', JSON.stringify(notesArray));
+            }
+
+            renderNotesTree() {
+                const organized = this.organizeNotesByDate();
+                
+                if (organized.size === 0) {
+                    this.notesTree.innerHTML = `
+                        <div class="empty-state">
+                            <h3>No notes found</h3>
+                            <p>Create your first note to get started</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                let html = '';
+                const sortedYears = Array.from(organized.keys()).sort((a, b) => b - a);
+
+                for (const year of sortedYears) {
+                    const yearExpanded = this.expandedYears.has(year);
+                    html += `
+                        <div class="year-group">
+                            <div class="year-header" onclick="notesApp.toggleYear(${year})">
+                                <span>${year}</span>
+                                <span class="chevron ${yearExpanded ? 'expanded' : ''}">▶</span>
+                            </div>
+                    `;
+
+                    if (yearExpanded) {
+                        const months = organized.get(year);
+                        const sortedMonths = Array.from(months.keys()).sort((a, b) => b - a);
+
+                        for (const monthNum of sortedMonths) {
+                            const monthKey = `${year}-${monthNum}`;
+                            const monthExpanded = this.expandedMonths.has(monthKey);
+                            const monthName = this.getMonthName(monthNum);
+                            
+                            html += `
+                                <div class="month-group">
+                                    <div class="month-header" onclick="notesApp.toggleMonth('${monthKey}')">
+                                        <span>${monthNum.toString().padStart(2, '0')} - ${monthName}</span>
+                                        <span class="chevron ${monthExpanded ? 'expanded' : ''}">▶</span>
+                                    </div>
+                            `;
+
+                            if (monthExpanded) {
+                                const notes = months.get(monthNum);
+                                const sortedNotes = notes.sort((a, b) => b.date.localeCompare(a.date));
+
+                                for (const note of sortedNotes) {
+                                    html += `
+                                        <div class="note-item" data-note-id="${note.id}" onclick="notesApp.selectNote('${note.id}')">
+                                            ${this.formatDate(note.date)}
+                                        </div>
+                                    `;
+                                }
+                            }
+
+                            html += '</div>';
+                        }
+                    }
+
+                    html += '</div>';
+                }
+
+                this.notesTree.innerHTML = html;
+            }
+
+            organizeNotesByDate() {
+                const organized = new Map();
+
+                for (const [noteId, note] of this.notes) {
+                    const date = new Date(note.date);
+                    const year = date.getFullYear();
+                    const month = date.getMonth() + 1;
+
+                    if (!organized.has(year)) {
+                        organized.set(year, new Map());
+                    }
+
+                    if (!organized.get(year).has(month)) {
+                        organized.get(year).set(month, []);
+                    }
+
+                    organized.get(year).get(month).push(note);
+                }
+
+                return organized;
+            }
+
+            toggleYear(year) {
+                if (this.expandedYears.has(year)) {
+                    this.expandedYears.delete(year);
+                } else {
+                    this.expandedYears.add(year);
+                }
+                this.renderNotesTree();
+            }
+
+            toggleMonth(monthKey) {
+                if (this.expandedMonths.has(monthKey)) {
+                    this.expandedMonths.delete(monthKey);
+                } else {
+                    this.expandedMonths.add(monthKey);
+                }
+                this.renderNotesTree();
+            }
+
+            getMonthName(monthNum) {
+                const months = [
+                    'January', 'February', 'March', 'April', 'May', 'June',
+                    'July', 'August', 'September', 'October', 'November', 'December'
+                ];
+                return months[monthNum - 1];
+            }
+
+            formatDate(dateString) {
+                const date = new Date(dateString);
+                return date.toLocaleDateString('en-US', {
+                    weekday: 'short',
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                });
+            }
+        }
+
+        // Initialize the app
+        const notesApp = new NotesApp();
+    </script>
+</body>
+</html>
